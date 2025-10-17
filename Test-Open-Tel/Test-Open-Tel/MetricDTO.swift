@@ -71,6 +71,18 @@ final class DoublePointDataDTO: Codable {
 //    }
 //}
 
+
+//import UIKit
+//
+//func deviceIdentifier() -> String {
+//    var systemInfo = utsname()
+//    uname(&systemInfo)
+//    return String(bytes: Data(bytes: &systemInfo.machine, count: Int(_SYS_NAMELEN)), encoding: .ascii)?
+//        .trimmingCharacters(in: .controlCharacters) ?? "Unknown"
+//}
+//
+//print(deviceIdentifier())
+
 class DoubleExemplarDataDTO: Codable {
     let filteredAttributes: [String: AttributeValue]
     let epochNanos: UInt64
