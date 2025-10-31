@@ -25,3 +25,44 @@ struct Test_Open_TelApp: App {
         }
     }
 }
+
+
+
+private struct AssociatedKeys {
+    static var loadStartTimeKey: UInt8 = 0
+}
+
+extension UIViewController {
+    var loadStartTime: CFAbsoluteTime? {
+        get { objc_getAssociatedObject(self, &AssociatedKeys.loadStartTimeKey) as? CFAbsoluteTime }
+        set { objc_setAssociatedObject(self, &AssociatedKeys.loadStartTimeKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+
+    @objc func swizzled_viewDidLoad() {
+        self.loadStartTime = CFAbsoluteTimeGetCurrent()
+        self.swizzled_viewDidLoad() // chama o original
+    }
+
+    @objc func swizzled_viewDidAppear(_ animated: Bool) {
+        self.swizzled_viewDidAppear(animated)
+        if let start = loadStartTime {
+            let duration = CFAbsoluteTimeGetCurrent() - start
+            print("⏱️ \(type(of: self)) levou \(duration)s para aparecer")
+        }
+    }
+
+    static func swizzleLoadTracking() {
+        let pairs: [(Selector, Selector)] = [
+            (#selector(viewDidLoad), #selector(swizzled_viewDidLoad)),
+            (#selector(viewDidAppear(_:)), #selector(swizzled_viewDidAppear(_:)))
+        ]
+        for (original, swizzled) in pairs {
+            guard
+                let originalMethod = class_getInstanceMethod(self, original),
+                let swizzledMethod = class_getInstanceMethod(self, swizzled)
+            else { continue }
+            method_exchangeImplementations(originalMethod, swizzledMethod)
+        }
+    }
+}
+
